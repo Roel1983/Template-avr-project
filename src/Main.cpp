@@ -1,13 +1,26 @@
 #define F_CPU 1000000UL
 
 #include "Led.hpp"
+#include <util/delay.h>
 
-int
-main (void)
+void Setup();
+void Loop();
+
+#ifndef UNITTEST
+int main (void)
 {
-   LedBegin();
-   while(1) 
-   {
-      LedToggle();
-   }
+	Setup();
+	while(1) {
+		Loop();
+	}
 }
+
+void Setup() {
+   LedBegin();
+}
+
+void Loop() {
+   LedToggle();
+   _delay_ms(100);
+}
+#endif

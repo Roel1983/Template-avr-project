@@ -4,13 +4,7 @@
 
 #include "fakeavr.h"
 
-class FakeAvrTestEventListener : public testing::EmptyTestEventListener {
-	void OnTestStart(const testing::TestInfo& test_info) override
-	{
-		FakeIoReset();
-	}
-};
 
-void FakeAvrInit() {
-	testing::UnitTest::GetInstance()->listeners().Append(new FakeAvrTestEventListener);
+void FakeAvrTestEventListener::OnTestStart(const testing::TestInfo& test_info) {
+	FakeIoReset();
 }

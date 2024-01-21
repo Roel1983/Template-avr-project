@@ -36,7 +36,7 @@ FIRMWARE_HEX_FILE          = $(BIN_DIR)/$(PROJECT_NAME).hex
 # Determine Unittest files
 UNITTEST_SOURCE_DIRS       = $(call wildcard_recursive,$(SOURCE_DIR)/,unittest/)
 
-UNITTEST_SOURCE_FILES_CPP  = $(filter-out %/Main.cpp, $(FIRMWARE_SOURCE_FILES_CPP))
+UNITTEST_SOURCE_FILES_CPP  = $(FIRMWARE_SOURCE_FILES_CPP)
 UNITTEST_SOURCE_FILES_CPP += $(call wildcard_recursive,$(UNITTEST_SOURCE_DIRS),*.cpp)
 UNITTEST_SOURCE_FILES_C   += $(call wildcard_recursive,$(UNITTEST_SOURCE_DIRS),*.c)
 UNITTEST_SOURCE_FILES      = $(UNITTEST_SOURCE_FILES_CPP) $(UNITTEST_SOURCE_FILES_C)
@@ -108,6 +108,9 @@ firmware: $(FIRMWARE_HEX_FILE)
 
 unittest: $(UNITTEST_EXECUTABLE_FILE)
 
+bla:
+	echo $(sort $(dir $(UNITTEST_OBJECT_FILES)))
+
 test: unittest
 ifeq ($(GCOVR_INSTALLED), yes)
 	@rm -f $(UNITTEST_GCDA_FILES)
@@ -115,9 +118,9 @@ ifeq ($(GCOVR_INSTALLED), yes)
 	
 	@$(if $(wildcard %.gcov),-rm *.gcov)
 	@$(call mkdir, $(CODE_COVERAGE_DIR))
-	$(foreach dir, $(sort $(dir $(UNITTEST_OBJECT_FILES))),\
+	$(foreach dir, $(filter-out build/unittest/src/unittest/fakeavr%,$(sort $(dir $(UNITTEST_OBJECT_FILES)))),\
 		gcov \
-		$(if $(filter-out %/fakeavr/,$(filter-out %/unittest/,$(dir))),-b) \
+		$(if $(filter-out %/unittest/,$(dir)),-b) \
 		-l -p -o $(dir) $(dir)*.gcno > /dev/null;)
 	
 	@gcovr --use-gcov-files --json > $(CODE_COVERAGE_DIR)/codecoverage.json
@@ -160,7 +163,7 @@ $(UNITTEST_EXECUTABLE_FILE): $(UNITTEST_OBJECT_FILES)
 $(UNITTEST_BUILD_DIR)/%.o: %.cpp
 $(UNITTEST_BUILD_DIR)/%.o: %.cpp $(UNITTEST_BUILD_DIR)/%.d
 	@$(call mkdir, $(dir $@))
-	g++ -c $(DEPFLAGS) $(CODE_COVERAGE_FLAGS) -Isrc/unittest/fakeavr -o $@ $< 
+	g++ -c $(DEPFLAGS) $(CODE_COVERAGE_FLAGS) -DUNITTEST -Isrc/unittest/fakeavr -o $@ $< 
 
 #dependency generation
 

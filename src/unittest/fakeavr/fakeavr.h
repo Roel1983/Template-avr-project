@@ -1,6 +1,8 @@
 #ifndef FAKEAVR_FAKEAVR_H
 #define FAKEAVR_FAKEAVR_H
 
-void FakeAvrInit();
+class FakeAvrTestEventListener : public testing::EmptyTestEventListener {
+	void OnTestStart(const testing::TestInfo& test_info) override;
+};
 
 #endif
