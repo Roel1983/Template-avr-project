@@ -99,8 +99,9 @@ $(FIRMWARE_ELF_FILE): $(FIRMWARE_OBJECT_FILES)
 	avr-gcc -mmcu=atmega16 $^ -o $@
 
 $(FIRMWARE_BUILD_DIR)/%.o: %.cpp
+$(FIRMWARE_BUILD_DIR)/%.o: %.cpp $(FIRMWARE_BUILD_DIR)/%.d
 	@$(call mkdir, $(dir $@))
-	avr-gcc -c -Wall -Os -mmcu=atmega16 $< -o $@
+	avr-gcc -c -Wall -Os $(DEPFLAGS) -mmcu=atmega16 $< -o $@
 
 # Unittest
 bla:
@@ -117,6 +118,7 @@ $(UNITTEST_BUILD_DIR)/%.o: %.cpp $(UNITTEST_BUILD_DIR)/%.d
 	g++ -c $(DEPFLAGS) -Isrc/unittest/fakeavr -o $@ $< 
 
 DEPFILES := $(UNITTEST_OBJECT_FILES:%.o=%.d)
+DEPFILES += $(FIRMWARE_OBJECT_FILES:%.o=%.d)
 $(DEPFILES):
 
 include $(wildcard $(DEPFILES))
