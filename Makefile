@@ -45,6 +45,9 @@ UNITTEST_OBJECT_FILES      = $(call ObjectFileName, $(addprefix $(UNITTEST_BUILD
 
 UNITTEST_EXECUTABLE_FILE   = $(call ExecutableFileName, $(BIN_DIR)/$(PROJECT_NAME)_unittest)
 
+# Dependency generation
+DEPFLAGS = -MT $@ -MMD -MP -MF $(basename $@).d
+
 # Determine avrdude args
 AVRDUDE_ARGS               = -carduino -P$(UPLOAD_PORT) -b57600
 
@@ -100,6 +103,8 @@ $(FIRMWARE_BUILD_DIR)/%.o: %.cpp
 	avr-gcc -c -Wall -Os -mmcu=atmega16 $< -o $@
 
 # Unittest
+bla:
+	@echo $(DEPFILES)
 
 $(UNITTEST_EXECUTABLE_FILE): $(UNITTEST_OBJECT_FILES)
 	@$(call mkdir, $(dir $@))
@@ -107,5 +112,11 @@ $(UNITTEST_EXECUTABLE_FILE): $(UNITTEST_OBJECT_FILES)
 	g++ -o $@ $^ /usr/src/gtest/lib/libgtest.a
 
 $(UNITTEST_BUILD_DIR)/%.o: %.cpp
+$(UNITTEST_BUILD_DIR)/%.o: %.cpp $(UNITTEST_BUILD_DIR)/%.d
 	@$(call mkdir, $(dir $@))
-	g++ -c -Isrc/unittest/fakeavr -o $@ $< 
+	g++ -c $(DEPFLAGS) -Isrc/unittest/fakeavr -o $@ $< 
+
+DEPFILES := $(UNITTEST_OBJECT_FILES:%.o=%.d)
+$(DEPFILES):
+
+include $(wildcard $(DEPFILES))
