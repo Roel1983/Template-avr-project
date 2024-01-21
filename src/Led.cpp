@@ -7,5 +7,9 @@ void LedBegin() {
 }
 
 void LedToggle() {
-   PORTB ^= _BV(PB0);
+	if (PORTB & _BV(PB0)) {
+		PORTB &= ~_BV(PB0);
+	} else {
+		PORTB |= _BV(PB0);
+	}
 }

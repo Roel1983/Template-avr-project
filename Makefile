@@ -4,9 +4,6 @@ UPLOAD_PORT               ?= /dev/ttyUSB0
 
 all:
 
-# Add the file to be unittested
-UNITTEST_SOURCE_FILES_CPP += src/Led.cpp 
-
 # Directories
 SOURCE_DIR                := src
 BUILD_DIR                 := build
@@ -39,6 +36,7 @@ FIRMWARE_HEX_FILE          = $(BIN_DIR)/$(PROJECT_NAME).hex
 # Determine Unittest files
 UNITTEST_SOURCE_DIRS       = $(call wildcard_recursive,$(SOURCE_DIR)/,unittest/)
 
+UNITTEST_SOURCE_FILES_CPP  = $(filter-out %/Main.cpp, $(FIRMWARE_SOURCE_FILES_CPP))
 UNITTEST_SOURCE_FILES_CPP += $(call wildcard_recursive,$(UNITTEST_SOURCE_DIRS),*.cpp)
 UNITTEST_SOURCE_FILES_C   += $(call wildcard_recursive,$(UNITTEST_SOURCE_DIRS),*.c)
 UNITTEST_SOURCE_FILES      = $(UNITTEST_SOURCE_FILES_CPP) $(UNITTEST_SOURCE_FILES_C)
@@ -47,7 +45,8 @@ UNITTEST_BUILD_DIR         = $(BUILD_DIR)/unittest
 UNITTEST_OBJECT_FILES      = $(call ObjectFileName, $(addprefix $(UNITTEST_BUILD_DIR)/, $(UNITTEST_SOURCE_FILES)))
 
 UNITTEST_EXECUTABLE_FILE   = $(call ExecutableFileName, $(BIN_DIR)/$(PROJECT_NAME)_unittest)
-
+bla:
+	echo $(UNITTEST_SOURCE_DIRS)
 # Dependency generation
 DEPFLAGS = -MT $@ -MMD -MP -MF $(basename $@).d
 
@@ -92,6 +91,8 @@ endif
 UNITTEST_GCDA_FILES = $(UNITTEST_OBJECT_FILES:%.o=%.gcda)
 UNITTEST_GCNO_FILES = $(UNITTEST_OBJECT_FILES:%.o=%.gcno)
 
+exclude_from_code_coverage = $(filter %_test,$1)$(filter src/unittest/fakeavr/%,$1)
+
 # Public targets
 .PHONY: all
 .PHONY: firmware
@@ -113,13 +114,15 @@ ifeq ($(GCOVR_INSTALLED), yes)
 	./$(UNITTEST_EXECUTABLE_FILE)
 	
 	@$(if $(wildcard %.gcov),-rm *.gcov)
-	@$(foreach dir, $(UNITTEST_SOURCE_DIRS), \
-			gcov -b -l -p -c -o $(UNITTEST_BUILD_DIR)/$(dir) $(UNITTEST_BUILD_DIR)/$(dir)/*.gcno > /dev/null;)
 	@$(call mkdir, $(CODE_COVERAGE_DIR))
-	@echo
-	@echo "Coverage:"
-	@gcovr --html-details $(CODE_COVERAGE_DIR)/codecoverage.html -use-gcov-files --root .
-	@-rm *.gcov
+	$(foreach dir, $(sort $(dir $(UNITTEST_OBJECT_FILES))),\
+		gcov \
+		$(if $(filter-out %/fakeavr/,$(filter-out %/unittest/,$(dir))),-b) \
+		-l -p -o $(dir) $(dir)*.gcno > /dev/null;)
+	
+	@gcovr --use-gcov-files --json > $(CODE_COVERAGE_DIR)/codecoverage.json
+	@gcovr --add-tracefile $(CODE_COVERAGE_DIR)/codecoverage.json --html-details $(CODE_COVERAGE_DIR)/codecoverage.html
+	@gcovr --add-tracefile $(CODE_COVERAGE_DIR)/codecoverage.json --print-summary
 else
 	./$(UNITTEST_EXECUTABLE_FILE)
 endif
