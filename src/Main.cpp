@@ -1,7 +1,7 @@
 #define F_CPU 1000000UL
 
+#include "Button.hpp"
 #include "Led.hpp"
-#include <util/delay.h>
 
 void Setup();
 void Loop();
@@ -14,13 +14,16 @@ int main (void)
 		Loop();
 	}
 }
+#endif
 
 void Setup() {
    LedBegin();
+   ButtonBegin();
 }
 
 void Loop() {
-   LedToggle();
-   _delay_ms(100);
+	if (ButtonIsPressed()) {
+		LedToggle();
+	}
 }
-#endif
+

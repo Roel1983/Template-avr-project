@@ -1,8 +1,8 @@
+all:
+
 # Public settings
 PROJECT_NAME              ?= RGBW-bar
 UPLOAD_PORT               ?= /dev/ttyUSB0
-
-all:
 
 # Directories
 SOURCE_DIR                := src
@@ -108,14 +108,12 @@ firmware: $(FIRMWARE_HEX_FILE)
 
 unittest: $(UNITTEST_EXECUTABLE_FILE)
 
-bla:
-	echo $(sort $(dir $(UNITTEST_OBJECT_FILES)))
-
 test: unittest
 ifeq ($(GCOVR_INSTALLED), yes)
 	@rm -f $(UNITTEST_GCDA_FILES)
-	./$(UNITTEST_EXECUTABLE_FILE)
-	
+endif
+	./$(UNITTEST_EXECUTABLE_FILE) --gtest_brief=1
+ifeq ($(GCOVR_INSTALLED), yes)	
 	@$(if $(wildcard %.gcov),-rm *.gcov)
 	@$(call mkdir, $(CODE_COVERAGE_DIR))
 	$(foreach dir, $(filter-out build/unittest/src/unittest/fakeavr%,$(sort $(dir $(UNITTEST_OBJECT_FILES)))),\
@@ -124,10 +122,8 @@ ifeq ($(GCOVR_INSTALLED), yes)
 		-l -p -o $(dir) $(dir)*.gcno > /dev/null;)
 	
 	@gcovr --use-gcov-files --json > $(CODE_COVERAGE_DIR)/codecoverage.json
-	@gcovr --add-tracefile $(CODE_COVERAGE_DIR)/codecoverage.json --html-details $(CODE_COVERAGE_DIR)/codecoverage.html
+	@gcovr --add-tracefile $(CODE_COVERAGE_DIR)/codecoverage.json --html-nested $(CODE_COVERAGE_DIR)/codecoverage.html
 	@gcovr --add-tracefile $(CODE_COVERAGE_DIR)/codecoverage.json --print-summary
-else
-	./$(UNITTEST_EXECUTABLE_FILE)
 endif
 
 clean:
