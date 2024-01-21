@@ -7,7 +7,6 @@ extern void Loop();
 
 TEST(Main_Main, button_toggles_led) {
 	::Setup();
-	
 	EXPECT_EQ(DDRB & _BV(DDB0), _BV(DDB0));
 	EXPECT_NE(DDRB & _BV(DDB1), _BV(DDB1));
 	EXPECT_FALSE(PORTB & _BV(PB0)) << "Led is initialy off";

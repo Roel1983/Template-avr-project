@@ -98,22 +98,32 @@ exclude_from_code_coverage = $(filter %_test,$1)$(filter src/unittest/fakeavr/%,
 .PHONY: firmware
 .PHONY: unittest
 .PHONY: test
+.PHONY: codecoverage
 .PHONY: clean
 .PHONY: cleanall
 .PHONY: upload
 
-all: firmware test
+all: firmware
+ifeq ($(GCOVR_INSTALLED), yes)
+all: codecoverage
+else
+all: test
+endif
 
 firmware: $(FIRMWARE_HEX_FILE)
 
 unittest: $(UNITTEST_EXECUTABLE_FILE)
 
 test: unittest
-ifeq ($(GCOVR_INSTALLED), yes)
 	@rm -f $(UNITTEST_GCDA_FILES)
-endif
 	./$(UNITTEST_EXECUTABLE_FILE) --gtest_brief=1
-ifeq ($(GCOVR_INSTALLED), yes)	
+
+codecoverage: $(CODE_COVERAGE_DIR)/codecoverage.html
+
+$(CODE_COVERAGE_DIR)/codecoverage.html: $(UNITTEST_EXECUTABLE_FILE)
+	@rm -f $(UNITTEST_GCDA_FILES)
+	./$(UNITTEST_EXECUTABLE_FILE) --gtest_brief=1
+	
 	@$(if $(wildcard %.gcov),-rm *.gcov)
 	@$(call mkdir, $(CODE_COVERAGE_DIR))
 	$(foreach dir, $(filter-out build/unittest/src/unittest/fakeavr%,$(sort $(dir $(UNITTEST_OBJECT_FILES)))),\
@@ -124,7 +134,6 @@ ifeq ($(GCOVR_INSTALLED), yes)
 	@gcovr --use-gcov-files --json > $(CODE_COVERAGE_DIR)/codecoverage.json
 	@gcovr --add-tracefile $(CODE_COVERAGE_DIR)/codecoverage.json --html-nested $(CODE_COVERAGE_DIR)/codecoverage.html
 	@gcovr --add-tracefile $(CODE_COVERAGE_DIR)/codecoverage.json --print-summary
-endif
 
 clean:
 	@test -d "$(BUILD_DIR)" && rm -r $(BUILD_DIR) || :
