@@ -139,16 +139,16 @@ upload: $(FIRMWARE_HEX_FILE) avrdude
 	avrdude -p m328p $(AVRDUDE_ARGS) -D -U flash:w:$(FIRMWARE_HEX_FILE)
 
 # Firmware 
-$(FIRMWARE_HEX_FILE): $(FIRMWARE_ELF_FILE) avr-gcc
+$(FIRMWARE_HEX_FILE): $(FIRMWARE_ELF_FILE) | avr-gcc
 	@$(call mkdir, $(dir $@))
 	avr-objcopy -O ihex -j .text -j .data $< $@
 
-$(FIRMWARE_ELF_FILE): $(FIRMWARE_OBJECT_FILES) avr-gcc
+$(FIRMWARE_ELF_FILE): $(FIRMWARE_OBJECT_FILES) | avr-gcc
 	@$(call mkdir, $(dir $@))
 	avr-gcc -mmcu=atmega16 $(FIRMWARE_OBJECT_FILES) -o $@
 
-$(FIRMWARE_BUILD_DIR)/%.o: %.cpp avr-gcc
-$(FIRMWARE_BUILD_DIR)/%.o: %.cpp avr-gcc $(FIRMWARE_BUILD_DIR)/%.d
+$(FIRMWARE_BUILD_DIR)/%.o: %.cpp
+$(FIRMWARE_BUILD_DIR)/%.o: %.cpp $(FIRMWARE_BUILD_DIR)/%.d | avr-gcc
 	@$(call mkdir, $(dir $@))
 	avr-gcc -c -Wall -Os $(DEPFLAGS) -mmcu=atmega16 $< -o $@
 
@@ -161,6 +161,9 @@ $(UNITTEST_BUILD_DIR)/%.o: %.cpp
 $(UNITTEST_BUILD_DIR)/%.o: %.cpp $(UNITTEST_BUILD_DIR)/%.d
 	@$(call mkdir, $(dir $@))
 	g++ -c $(DEPFLAGS) $(CODE_COVERAGE_FLAGS) -Isrc/unittest/fakeavr -o $@ $< 
+
+#dependency generation
+
 
 DEPFILES := $(UNITTEST_OBJECT_FILES:%.o=%.d)
 DEPFILES += $(FIRMWARE_OBJECT_FILES:%.o=%.d)
